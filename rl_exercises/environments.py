@@ -200,7 +200,10 @@ class MarsRover(gym.Env):
         for s in S:
             for a in A:
                 s_next = max(0, min(nS - 1, s + (-1 if a == 0 else 1)))
-                T[s, a, s_next] = float(P[s, a])
+                s_flip = max(0, min(nS - 1, s + (1 if a == 0 else -1)))
+                p = float(P[s, a])
+                T[s, a, s_next] += p
+                T[s, a, s_flip] += 1.0 - p
         return T
 
     def render(self, mode: str = "human"):

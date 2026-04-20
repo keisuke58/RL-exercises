@@ -5,7 +5,7 @@ Setup
 -----
 Context features (2 features):
   - goal_reward : reward at rightmost state (position 4)
-  - slip_prob   : probability that action is flipped (stochasticity)
+  - slip_prob   : probability that chosen action is flipped (1 - P[s,a])
 
 Training contexts : [(5.0, 0.0), (10.0, 0.2), (15.0, 0.4)]
 Validation contexts : same as training (Section 6.4 recommendation)
@@ -13,6 +13,9 @@ Test contexts (interpolation) : [(7.5, 0.1), (12.5, 0.3)]
 Test contexts (extrapolation) : [(20.0, 0.6), (2.0, 0.5)]
 
 Context rotation during training: round-robin over training contexts.
+
+"With context"    : VI computes optimal policy per context using that context's MDP.
+"Without context" : VI runs on averaged training MDP; single blind policy for all contexts.
 
 Results
 -------
@@ -27,41 +30,39 @@ Test (Interpolation):
   goal=12.5 slip=0.3        56.05           56.05
 
 Test (Extrapolation):
-  goal=20.0 slip=0.6        21.03           21.23
-  goal=2.0  slip=0.5         5.47            5.56
+  goal=20.0 slip=0.6        32.23           21.23  ← clear gap
+  goal=2.0  slip=0.5         5.42            5.56
 
 Observations
 ------------
-1. Both policies are identical ([1,1,1,1,1] = always go right).
-   In MarsRover, going right is always optimal as long as goal_reward >
-   start_reward (1.0). The context changes reward magnitudes but not the
-   optimal action direction. This is a key limitation of this simple 1D
-   environment compared to the complex benchmarks in the paper.
+1. Validation and interpolation: both methods perform identically.
+   The averaged training MDP yields policy [1,1,1,1,1] (always right),
+   which is also optimal for all in-distribution and interpolation contexts.
+   The context-aware agent agrees on this policy, so no gap appears.
 
-2. With context vs. without context shows almost no difference here.
-   This differs from the paper's results, where context information
-   significantly improves generalization, especially on extrapolation.
-   The reason: in cMDPs with more complex structure, context can change
-   which actions are optimal, not just the reward scale. In MarsRover
-   the optimal action structure is context-invariant.
+2. Extrapolation (goal=20.0, slip=0.6): context-aware wins (+11 reward).
+   With slip_prob=0.6, actions are unreliable. The context-aware VI adapts
+   its policy to this high-noise MDP and finds a better strategy.
+   The context-blind agent applies the policy from the low-noise training
+   distribution, which is suboptimal here.
+   This matches the paper's finding that context helps most at extrapolation.
 
-3. Extrapolation performance drops for both methods:
-   goal=20.0 slip=0.6 gives ~21 reward vs. ~61 for goal=10.0 slip=0.2.
-   High slip_prob (0.6) means actions are very unreliable, making it
-   hard to reach the high-reward right end consistently, regardless of
-   how high the goal reward is. This aligns with the paper: policies
-   that work well in low-noise training contexts may generalize poorly
-   to high-noise test contexts.
+3. Extrapolation (goal=2.0, slip=0.5): both methods nearly tied.
+   When slip_prob=0.5, all actions are equivalent (T[s,a,:] is identical
+   for both actions at all interior states), making the environment a
+   random walk. No policy can consistently reach the right end, so both
+   methods perform similarly regardless of context.
 
-4. Where we see the same as the paper (Section 6.4):
-   - Extrapolation is harder than interpolation (lower rewards for
-     out-of-distribution contexts).
-   - Providing context helps when the context changes the optimal policy.
-     Here it does not help because the optimal policy is context-invariant.
+4. Where results align with the paper (Section 6.4):
+   - Providing context helps on out-of-distribution (extrapolation) contexts.
+   - Interpolation generalizes well even without context.
+   - The gap between context-aware and blind is largest when the new context
+     changes the optimal policy structure (high slip → different strategy).
 
-5. What would change with a richer environment:
-   If goal_reward could be negative or if contexts included n_states or
-   reward structure that flips the optimal direction, context information
-   would become critical. In that case, the context-aware agent would
-   adapt its policy per context while the blind agent would be stuck with
-   a suboptimal average policy.
+5. Where results differ from the paper:
+   - The paper shows larger and more consistent gaps due to complex environments
+     where context changes which actions are optimal across many states.
+   - In MarsRover, the effect is visible only at extreme extrapolation because
+     the 1D structure limits how much context can alter optimal behavior.
+   - Deep RL methods in the paper suffer from sample inefficiency on top;
+     our model-based VI solves each context exactly given T and R.
