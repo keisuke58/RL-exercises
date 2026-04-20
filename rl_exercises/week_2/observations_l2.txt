@@ -1,0 +1,27 @@
+Level 2 Observations: Decreasing Information Flow
+===================================================
+
+Both Policy Iteration and Value Iteration require full model knowledge:
+  - The transition matrix T[s, a, s'] (get_transition_matrix())
+  - The reward function R[s, a] (get_reward_per_action())
+
+If we only have access to step(), neither algorithm works in its current form.
+
+Reason:
+  step() only reveals the next state and reward for a single (s, a) pair
+  at a time. We cannot construct the full transition matrix T or the full
+  reward matrix R_sa without enumerating every (s, a) combination many times.
+
+  Even if we sampled every (s, a) pair exhaustively to estimate T and R_sa,
+  the stochastic environment would require many samples per pair to get
+  accurate probability estimates, making it computationally expensive.
+
+  More fundamentally, this is the model-free vs. model-based distinction:
+  - Model-based (Policy/Value Iteration): requires full MDP dynamics
+  - Model-free (Q-learning, SARSA, etc.): learns from step() interactions only
+
+Conclusion:
+  With only step() available, we must switch to model-free methods.
+  Policy Iteration and Value Iteration cannot be applied directly,
+  as they rely on the transition and reward model being explicitly known.
+  This is exactly the setting we will work with for the rest of the semester.
