@@ -18,6 +18,8 @@ from minigrid.wrappers import FlatObsWrapper
 from omegaconf import DictConfig, OmegaConf
 from rich import print as printr
 from rl_exercises.agent import AbstractAgent, RandomAgent
+from rl_exercises.week_2.policy_iteration import PolicyIteration
+from rl_exercises.week_2.value_iteration import ValueIteration
 from rl_exercises.agent.buffer import SimpleBuffer
 from rl_exercises.environments import MarsRover
 
@@ -57,6 +59,10 @@ def train(cfg: DictConfig) -> float:
         return train_sb3(env, cfg)
     elif cfg.agent == "random":
         agent = RandomAgent(env)
+    elif cfg.agent == "policy_iteration":
+        agent = PolicyIteration(env, **cfg.agent_kwargs)
+    elif cfg.agent == "value_iteration":
+        agent = ValueIteration(env, **cfg.agent_kwargs)
     else:
         # TODO: add your agent options here
         raise NotImplementedError

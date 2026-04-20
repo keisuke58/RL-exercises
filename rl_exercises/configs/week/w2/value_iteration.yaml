@@ -1,0 +1,15 @@
+# @package _global_
+env_name: MarsRover
+env_kwargs:
+  transition_probabilities:
+    - [0.5, 0.5]
+    - [0.5, 0.5]
+    - [0.5, 0.5]
+    - [0.5, 0.5]
+    - [0.5, 0.5]
+agent: value_iteration
+agent_name: value_iteration
+agent_class: ValueIteration
+training_steps: 100
+update_after_episode_end: true
+batch_size: 1

@@ -1,0 +1,8 @@
+# @package _global_
+env_name: MarsRover
+agent: policy_iteration
+agent_name: policy_iteration
+agent_class: PolicyIteration
+training_steps: 100
+update_after_episode_end: true
+batch_size: 1
